@@ -42,7 +42,7 @@ if [ ${ssh_cib} -eq  0 ]; then
         fi
 fi
 
-rsync -rltgoDphv --force --delete-after  ${rsync_src} ${rsync_cib} >> /dev/null
+rsync -rltgoDphv --force --delete-after --no-perms --no-owner --no-group  ${rsync_src} ${rsync_cib} >> /dev/null
 code_retour=$?
 if [ ${code_retour}  -ne 0 ] ; then
     echo "rsync error : "${code_retour}
