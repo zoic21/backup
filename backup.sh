@@ -122,7 +122,6 @@ if [ ${ftp} -ne 0 ] ; then
         ftp_keep_day=${ftp_keep_day-9999}
         ftp_dir=${ftp_dir-""}
         ftp_name=${ftp_name-$(hostname)}
-        ftp_dir=${ftp_dir-""}
 
         stdout=$(${repCourant}/backup_ftp.sh ${ftp_server} ${ftp_user} ${ftp_password} ${cib_dir} ${ftp_tmp} ${ftp_keep_day} ${ftp_name} ${ftp_dir} 2>&1)
         if [ $? -ne 0 ]; then
@@ -139,6 +138,29 @@ if [ ${ftp} -ne 0 ] ; then
                 fi
         fi
 fi
+
+if [ ${samba} -ne 0 ] ; then
+        echo -n -e "[$(date +%d-%m-%Y\ %H:%M:%S)] Envoi sur le serveur ${JAUNE}SAMBA${NORMAL}... "
+        samba_keep_day=${ftp_samba_day-9999}
+        samba_dir=${samba_dir-""}
+        samba_name=${samba_name-$(hostname)}
+
+        stdout=$(${repCourant}/backup_samba.sh ${samba_server} ${samba_user} ${samba_password} ${cib_dir} ${samba_tmp} ${samba_keep_day} ${samba_name} ${samba_dir} ${samba_share} 2>&1)
+        if [ $? -ne 0 ]; then
+                error=1
+                mailContent=${mailContent}"\n[$(date +%d-%m-%Y\ %H:%M:%S)] Envoi FTP ECHEC : ${stdout}"
+                echo "[$(date +%d-%m-%Y\ %H:%M:%S)] Envoie SAMBA ECHEC : ${stdout}" >> ${report_log}
+                echo -e "[$(date +%d-%m-%Y\ %H:%M:%S)] ${ROUGE}ECHEC${NORMAL} : ${CYAN}${stdout}${NORMAL}"
+        else
+                echo "[$(date +%d-%m-%Y\ %H:%M:%S)] Envoie FTP OK" >> ${report_log}
+                echo -e "[$(date +%d-%m-%Y\ %H:%M:%S)] ${VERT}OK${NORMAL}"
+                if [ ${debug} -ne 0 ] ; then
+                        echo ${stdout} >> ${report_log}
+                        echo -e ${CYAN}${stdout}${NORMAL}
+                fi
+        fi
+fi
+
 
 ########################################################Archivage########################################################
 if [ ${archive} -ne 0 ] ; then
