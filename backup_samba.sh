@@ -20,7 +20,7 @@ if [ ! -d $tmp_dir ]; then
 fi
 
 echo -n "Création du l'archive... "
-tar -czf ${tmp_dir}/${ftp_filename}-${date}.tar.gz ${cib_dir}
+tar -czf ${tmp_dir}/${samba_filename}-${date}.tar.gz ${cib_dir}
 if [ $? -ne 0 ]; then
         echo "Impossible de ceer le TAR"
     exit 1
@@ -34,7 +34,7 @@ if [ $? -ne 0 ]; then
 fi
 echo 'OK'
 
-smbclient ${samba_share} -U ${samba_username}%${samba_password} -I ${samba_ip} -c "cd ${samba_dir}; delete ${ftp_filename}-${date_remove}.tar.gz"
+smbclient ${samba_share} -U ${samba_username}%${samba_password} -I ${samba_ip} -c "cd ${samba_dir}; delete ${samba_filename}-${date_remove}.tar.gz"
 
 if [ $? -ne 0 ]; then
         echo "Impossible de sauvegarder sur Samba"
