@@ -6,7 +6,7 @@ cib_dir=${4}
 tmp_dir=${5}
 samba_dir=${8}
 samba_filename=${7-$(hostname)}
-samba_share=${8}
+samba_share=${9}
 
 date=$(date +%Y-%m-%d)
 date_remove=$(date --date "${6} days ago" +%Y-%m-%d)
