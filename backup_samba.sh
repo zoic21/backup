@@ -46,7 +46,7 @@ fi
 echo 'OK'
 
 echo -n "Supression de l'archive... "
-rm -rf ${tmp_dir}
+rm -rf ${tmp_dir}/${samba_filename}-${date}.tar.gz
 if [ $? -ne 0 ]; then
         echo "Impossible de supprimer le dossier temporaire : ${tmp_dir}"
         exit 1
