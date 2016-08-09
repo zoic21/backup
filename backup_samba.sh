@@ -20,7 +20,8 @@ if [ ! -d $tmp_dir ]; then
 fi
 
 echo -n "Création du l'archive... "
-tar -czf ${tmp_dir}/${samba_filename}-${date}.tar.gz ${cib_dir} 2>/dev/null
+cd ${cib_dir}
+tar -czf ${tmp_dir}/${samba_filename}-${date}.tar.gz * 2>/dev/null
 if [ $? -ne 0 ]; then
         echo "Impossible de ceer le TAR"
     exit 1
