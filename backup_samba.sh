@@ -20,14 +20,16 @@ if [ ! -d $tmp_dir ]; then
 fi
 
 echo -n "Création du l'archive... "
-tar -czf ${tmp_dir}/${samba_filename}-${date}.tar.gz ${cib_dir}
+tar -czf ${tmp_dir}/${samba_filename}-${date}.tar.gz ${cib_dir} 2>/dev/null
 if [ $? -ne 0 ]; then
         echo "Impossible de ceer le TAR"
     exit 1
 fi
 echo 'OK'
 
-smbclient ${samba_share} -U ${samba_username}%${samba_password} -I ${samba_ip} -c "cd ${samba_dir}; put ${tmp_dir}/${samba_filename}-${date}.tar.gz"
+
+cd ${tmp_dir}
+smbclient ${samba_share} -U ${samba_username}%${samba_password} -I ${samba_ip} -c "cd ${samba_dir}; put ${samba_filename}-${date}.tar.gz"
 if [ $? -ne 0 ]; then
         echo "Impossible de sauvegarder sur le Samba"
         exit 1
