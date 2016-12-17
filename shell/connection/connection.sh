@@ -53,7 +53,7 @@ IP=$HOST
 KEY=""
 if [ $(grep $HOST ${DIR}/dns | wc -l) -ne 0 ]; then
         IP2=$(awk -v dest=$HOST '$2 == dest { print $1 ; }' ${DIR}/dns)
-        if [ -z $IP2 ];then
+        if [ ! -z $IP2 ];then
                 IP=$IP2
                 if [ -f ${DIR}/username ];then
                         USER=$(cat ${DIR}/username)
