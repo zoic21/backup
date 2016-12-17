@@ -24,13 +24,13 @@ else
         touch $TMPFILEO
 fi
 
-NB=$(cat $TMPFILE  $TMPFILEO | wc -l)
+NB=$(cat $TMPFILE $TMPFILEO | wc -l)
 if [ "$NB" = "0" ] ; then
         echo "no servers found for $IN"
         exit 1
 fi
 
-SEL=$(grep -nE "m[      ]|m$" $TMPFILEO | head -1 | cut -d: -f1)
+SEL=$(cat $TMPFILE $TMPFILEO | grep -nE "m[      ]|m$" | head -1 | cut -d: -f1)
 if [ "$SEL"="" ]; then
         SEL=1
 fi
