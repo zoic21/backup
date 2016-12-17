@@ -1,15 +1,9 @@
 #!/bin/bash
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-TMPFILE=/tmp/con_$$_tmp.txt
 TMPFILEO=/tmp/con_$$_tmpO.txt
-if [ -f ${DIR}/username ];then
-        USER=$(cat ${DIR}/username)
-fi
-if [ -z "${USER}" ];then
-        USER='root'
-fi
+USER='root'
 
-trap 'echo "Exiting.."; rm -f "TMPFILEO" "$TMPFILE2" >/dev/null 2>&1 ;exit 2' 0 2
+trap 'echo "Exiting.."; rm -f "TMPFILEO" >/dev/null 2>&1 ;exit 2' 0 2
 
 if [ "$1" = "" ] ; then
         echo "Entrez un nom de host"
@@ -58,7 +52,13 @@ HOST=$(sed -n "${NUM}p" $TMPFILEO | awk '{ print $2 }')
 IP=$HOST
 KEY=""
 if [ $(grep $HOST ${DIR}/dns | wc -l) -ne 0 ]; then
-        IP=$(awk -v dest=$HOST '$2 == dest { print $1 ; }' ${DIR}/dns)
+        IP2=$(awk -v dest=$HOST '$2 == dest { print $1 ; }' ${DIR}/dns)
+        if [ -z $IP2 ];then
+                IP=$IP2
+                if [ -f ${DIR}/username ];then
+                        USER=$(cat ${DIR}/username)
+                fi
+        fi
 fi
 
 if [ -f ${DIR}/key ];then
