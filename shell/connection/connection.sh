@@ -2,7 +2,9 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 TMPFILE=/tmp/con_$$_tmp.txt
 TMPFILEO=/tmp/con_$$_tmpO.txt
-USER=$(cat ${DIR}/username)
+if [ -f ${DIR}/username ];then
+        USER=$(cat ${DIR}/username)
+fi
 if [ -z "${USER}" ];then
         USER='root'
 fi
@@ -16,7 +18,11 @@ else
         IN=$1
 fi
 grep -i $IN /etc/hosts | grep -vE "w[   ]|s[    ]|w$|s$" > $TMPFILE
-grep -i $IN ${DIR}/dns   > $TMPFILEO
+if [ -f ${DIR}/dns ];then
+        grep -i $IN ${DIR}/dns   > $TMPFILEO
+else
+        touch $TMPFILEO
+fi
 
 NB=$(cat $TMPFILE  $TMPFILEO | wc -l)
 if [ "$NB" = "0" ] ; then
