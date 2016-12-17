@@ -9,7 +9,7 @@ if [ -z "${USER}" ];then
         USER='root'
 fi
 
-trap 'echo "Exiting.."; rm -f "TMPFILEO" "$TMPFILE" "$TMPFILE2" >/dev/null 2>&1 ;exit 2' 0 2
+trap 'echo "Exiting.."; rm -f "TMPFILEO" "$TMPFILE2" >/dev/null 2>&1 ;exit 2' 0 2
 
 if [ "$1" = "" ] ; then
         echo "Entrez un nom de host"
@@ -17,20 +17,22 @@ if [ "$1" = "" ] ; then
 else
         IN=$1
 fi
-grep -i $IN /etc/hosts | grep -vE "w[   ]|s[    ]|w$|s$" > $TMPFILE
+
 if [ -f ${DIR}/dns ];then
         grep -i $IN ${DIR}/dns   > $TMPFILEO
 else
         touch $TMPFILEO
 fi
 
-NB=$(cat $TMPFILE $TMPFILEO | wc -l)
+grep -i $IN /etc/hosts | grep -vE "w[   ]|s[    ]|w$|s$" >> $TMPFILEO
+
+NB=$(cat $TMPFILEO | wc -l)
 if [ "$NB" = "0" ] ; then
         echo "no servers found for $IN"
         exit 1
 fi
 
-SEL=$(cat $TMPFILE $TMPFILEO | grep -nE "m[      ]|m$" | head -1 | cut -d: -f1)
+SEL=$(cat $TMPFILEO | grep -nE "m[      ]|m$" | head -1 | cut -d: -f1)
 if [ "$SEL"="" ]; then
         SEL=1
 fi
