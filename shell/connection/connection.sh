@@ -23,7 +23,7 @@ OLDIFS=$IFS
 IFS=";"
 I=0
 while read L_DNS L_IP L_PORT L_USER L_KEYFILE;do
-        if [ $(echo ${L_DNS} | grep -c ${SERVER}) -eq 0 ]; then
+        if [ $(echo ${L_DNS} | grep -c -i ${SERVER}) -eq 0 ]; then
                 continue
         fi
         I=$((${I} + 1))
@@ -37,7 +37,7 @@ done < ${CONFIG}
 IFS=$OLDIFS
 
 while read L_IP L_DNS;do
-        if [ $(echo ${L_DNS} | grep -c ${SERVER}) -eq 0 ]; then
+        if [ $(echo ${L_DNS} | grep -c -i ${SERVER}) -eq 0 ]; then
                 continue
         fi
         I=$((${I} + 1))
