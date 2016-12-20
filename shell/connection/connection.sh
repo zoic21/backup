@@ -10,11 +10,14 @@ JAUNE="\\033[1;33m"
 CYAN="\\033[1;36m"
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 SERVER=$1
+CMD=$2
 CONFIG=~/.connection_ref
 TMP_FILE=/tmp/connection_script_$$.tmp
-SSH_CMD="ssh "
+TMP_FILE2=/tmp/connection_script_$$2.tmp
+TMP_MSSH_FILE=/tmp/connection_mssh_$$2.tmp
 
 touch ${TMP_FILE}
+touch ${TMP_FILE2}
 
 OLDIFS=$IFS
 IFS=";"
@@ -52,33 +55,69 @@ if [ $I -eq 0 ]; then
 fi
 
 echo "Number ? default is 1"
-NUM=1
-read NUM
-if [ "$NUM" = "" ] ; then
-        NUM=$SEL
+NUMS=1
+read SEL
+if [ ! -z ${SEL} ] ; then
+        NUMS=${SEL}
 fi
 
-LINE=$(sed -n "${NUM}p" ${TMP_FILE})
-
-S_DNS=$(echo ${LINE} | cut -d \; -f 1)
-S_IP=$(echo ${LINE} | cut -d \; -f 2)
-S_PORT=$(echo ${LINE} | cut -d \; -f 3)
-S_USER=$(echo ${LINE} | cut -d \; -f 4)
-S_KEYFILE=$(echo ${LINE} | cut -d \; -f 5)
-
-if [ -z ${S_USER} ]; then
-        S_USER=root
+if [ ! -f "${CMD}" ]; then
+        echo ${CMD} > ${TMP_MSSH_FILE}
+else
+        TMP_MSSH_FILE=${CMD}
 fi
-if [ -z ${S_PORT} ]; then
-        S_PORT=22
-fi
-OPTS=''
-if [ ! -z ${S_KEYFILE} ]; then
-        OPTS="${OPTS} -i ${S_KEYFILE}"
-fi
-OPTS="${OPTS} ${S_USER}@${S_IP}"
-OPTS="${OPTS} -p ${S_PORT}"
 
-echo -e "Connection on ${VERT}${S_DNS}${NORMAL} (IP : ${VERT}${S_IP}${NORMAL}:${VERT}${S_PORT}${NORMAL}) with user ${VERT}${S_USER}${NORMAL}"
+if [ $(echo ${NUMS} | grep -c ';') -eq 0 ];then
+        sed -n "${NUMS}p" ${TMP_FILE} >> ${TMP_FILE2}
+else
+        for NUM in $(echo ${NUMS} | tr ";" "\n"); do
+                sed -n "${NUM}p" ${TMP_FILE} >> ${TMP_FILE2}
+        done
+fi
+IFS=';'
+while read -u10 S_DNS S_IP S_PORT S_USER S_KEYFILE;do
+        if [ -z ${S_IP} ];then
+                continue
+        fi
+        if [ -z ${S_USER} ]; then
+                S_USER=root
+        fi
+        if [ -z ${S_PORT} ]; then
+                S_PORT=22
+        fi
+        OPTS=''
+        if [ ! -z ${S_KEYFILE} ]; then
+                OPTS="${OPTS} -i ${S_KEYFILE} "
+        fi
+        OPTS="${OPTS}${S_USER}@${S_IP} "
+        OPTS="${OPTS}-p ${S_PORT}"
+        if [ -z ${CMD} ]; then
+                echo -e "Connection on ${VERT}${S_DNS}${NORMAL} (IP : ${VERT}${S_IP}${NORMAL}:${VERT}${S_PORT}${NORMAL}) with user ${VERT}${S_USER}${NORMAL}"
+                if [ ! -z ${S_KEYFILE} ]; then
+                        ssh -i ${S_KEYFILE} ${S_USER}@${S_IP} -p ${S_PORT}
+                else
+                        ssh ${S_USER}@${S_IP} -p ${S_PORT}
+                fi
+        else
+                echo -e "Command ${VERT}${CMD}${NORMAL} on ${VERT}${S_IP}${NORMAL}:${VERT}${S_PORT}${NORMAL} with user ${VERT}${S_USER}${NORMAL}"
+                OPTS_SCP=''
+                if [ ! -z ${S_KEYFILE} ]; then
+                        scp  -q ${S_KEYFILE} ${TMP_MSSH_FILE} ${S_USER}@${S_IP}:${TMP_MSSH_FILE} > /dev/null
+                else
+                        scp ${TMP_MSSH_FILE} ${S_USER}@${S_IP}:${TMP_MSSH_FILE} > /dev/null
+                fi
+                if [ $? -eq 0 ]; then
+                        if [ ! -z ${S_KEYFILE} ]; then
+                                ssh -n -x -i ${S_KEYFILE} ${S_USER}@${S_IP} -p ${S_PORT} "bash ${TMP_MSSH_FILE};rm ${TMP_MSSH_FILE}"
+                        else
+                                ssh -n -x ${S_USER}@${S_IP} -p ${S_PORT} "bash ${TMP_MSSH_FILE};rm ${TMP_MSSH_FILE}"
+                        fi
+                else
+                        echo -e "${ROUGE} Error on file transfert ${NORMAL}"
+                fi
+        fi
+done 10< ${TMP_FILE2}
 
-${SSH_CMD} ${OPTS}
+rm ${TMP_FILE} ${TMP_FILE2}
+IFS=$OLDIFS
+exit 0
