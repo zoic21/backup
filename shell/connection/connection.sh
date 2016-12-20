@@ -1,70 +1,84 @@
 #!/bin/bash
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-TMPFILEO=/tmp/con_$$_tmpO.txt
-USER='root'
+VERT="\\033[1;32m"
+NORMAL="\\033[0;39m"
+ROUGE="\\033[1;31m"
+ROSE="\\033[1;35m"
+BLEU="\\033[1;34m"
+BLANC="\\033[0;02m"
+BLANCLAIR="\\033[1;08m"
+JAUNE="\\033[1;33m"
+CYAN="\\033[1;36m"
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+SERVER=$1
+CONFIG=~/.connection_ref
+TMP_FILE=/tmp/connection_script_$$.tmp
+SSH_CMD="ssh "
 
-trap 'echo "Exiting.."; rm -f "TMPFILEO" >/dev/null 2>&1 ;exit 2' 0 2
+touch ${TMP_FILE}
 
-if [ "$1" = "" ] ; then
-        echo "Entrez un nom de host"
-        read IN
-else
-        IN=$1
+OLDIFS=$IFS
+IFS=";"
+I=0
+while read L_DNS L_IP L_PORT L_USER L_KEYFILE;do
+        if [ $(echo ${L_DNS} | grep -c ${SERVER}) -eq 0 ]; then
+                continue
+        fi
+        I=$((${I} + 1))
+        if [ ${I} -eq 1 ]; then
+                echo -e "${JAUNE}${I} - ${L_IP} ${L_DNS}${NORMAL}"
+        else
+                echo ${I} - ${L_IP} ${L_DNS}
+        fi
+        echo "${L_DNS};${L_IP};${L_PORT};${L_USER};${L_KEYFILE}" >> ${TMP_FILE}
+done < ${CONFIG}
+IFS=$OLDIFS
+
+while read L_IP L_DNS;do
+        if [ $(echo ${L_DNS} | grep -c ${SERVER}) -eq 0 ]; then
+                continue
+        fi
+        I=$((${I} + 1))
+        if [ ${I} -eq 1 ]; then
+                echo -e "${JAUNE}${I} - ${L_IP} ${L_DNS}${NORMAL}"
+        else
+                echo ${I} - ${L_IP} ${L_DNS}
+        fi
+        echo "${L_DNS};${L_IP};22;root;;" >> ${TMP_FILE}
+done < /etc/hosts
+
+if [ $I -eq 0 ]; then
+        echo -e "${ROUGE}No system found${NORMAL}"
+        exit 0
 fi
 
-if [ -f ${DIR}/dns ];then
-        grep -i $IN ${DIR}/dns   > $TMPFILEO
-else
-        touch $TMPFILEO
-fi
-
-grep -i $IN /etc/hosts | grep -vE "w[   ]|s[    ]|w$|s$" >> $TMPFILEO
-
-NB=$(cat $TMPFILEO | wc -l)
-if [ "$NB" = "0" ] ; then
-        echo "no servers found for $IN"
-        exit 1
-fi
-
-SEL=$(cat $TMPFILEO | grep -nE "m[      ]|m$" | head -1 | cut -d: -f1)
-if [ "$SEL"="" ]; then
-        SEL=1
-fi
-echo "$NB servers found : "
-cat $TMPFILEO | awk '
-BEGIN { l=1; lineS='$SEL' }
-{
-        if ( l == lineS ) { printf "%c[33m",27 ; }
-        printf "%s - %s", l, $0 ;
-        if ( l == lineS ) { printf "%c[0m",27 ; }
-        printf "\n";
-        l++
-}'
-echo "Quel systeme ? default : $SEL "
+echo "Number ? default is 1"
+NUM=1
 read NUM
 if [ "$NUM" = "" ] ; then
         NUM=$SEL
 fi
 
-SSH_CMD_USER="ssh "
+LINE=$(sed -n "${NUM}p" ${TMP_FILE})
 
-HOST=$(sed -n "${NUM}p" $TMPFILEO | awk '{ print $2 }')
-IP=$HOST
-KEY=""
-if [ $(grep $HOST ${DIR}/dns | wc -l) -ne 0 ]; then
-        IP2=$(awk -v dest=$HOST '$2 == dest { print $1 ; }' ${DIR}/dns)
-        if [ ! -z $IP2 ];then
-                IP=$IP2
-                if [ -f ${DIR}/username ];then
-                        USER=$(cat ${DIR}/username)
-                fi
-        fi
+S_DNS=$(echo ${LINE} | cut -d \; -f 1)
+S_IP=$(echo ${LINE} | cut -d \; -f 2)
+S_PORT=$(echo ${LINE} | cut -d \; -f 3)
+S_USER=$(echo ${LINE} | cut -d \; -f 4)
+S_KEYFILE=$(echo ${LINE} | cut -d \; -f 5)
+
+if [ -z ${S_USER} ]; then
+        S_USER=root
 fi
-
-if [ -f ${DIR}/key ];then
-        $SSH_CMD_USER -i ${DIR}/key -l ${USER}@${IP}
-else
-        $SSH_CMD_USER ${USER}@${IP}
+if [ -z ${S_PORT} ]; then
+        S_PORT=22
 fi
+OPTS=''
+if [ ! -z ${S_KEYFILE} ]; then
+        OPTS="${OPTS} -i ${S_KEYFILE}"
+fi
+OPTS="${OPTS} ${S_USER}@${S_IP}"
+OPTS="${OPTS} -p ${S_PORT}"
 
-rm "$TMPFILEO"  2>/dev/null
+echo -e "Connection on ${VERT}${S_DNS}${NORMAL} (IP : ${VERT}${S_IP}${NORMAL}:${VERT}${S_PORT}${NORMAL}) with user ${VERT}${S_USER}${NORMAL}"
+
+${SSH_CMD} ${OPTS}
