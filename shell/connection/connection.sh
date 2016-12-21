@@ -51,13 +51,15 @@ done < /etc/hosts
 
 DNSASK=$(getent hosts ${SERVER} | awk '{print $1}')
 if [ ! -z ${DNSASK} ]; then
-        I=$((${I} + 1))
-        if [ ${I} -eq 1 ]; then
-                echo -e "${JAUNE}${I} - ${DNSASK} ${SERVER}${NORMAL}"
-        else
-                echo ${I} - ${DNSASK} ${SERVER}
+        if [ $(grep -c -i ${DNSASK} ${TMP_FILE}) -eq 0 ]; then
+                I=$((${I} + 1))
+                if [ ${I} -eq 1 ]; then
+                        echo -e "${JAUNE}${I} - ${DNSASK} ${SERVER}${NORMAL}"
+                else
+                        echo ${I} - ${DNSASK} ${SERVER}
+                fi
+                echo "${SERVER};${DNSASK};22;root;;" >> ${TMP_FILE}
         fi
-        echo "${SERVER};${DNSASK};22;root;;" >> ${TMP_FILE}
 fi
 
 if [ $I -eq 0 ]; then
