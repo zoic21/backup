@@ -57,6 +57,7 @@ if [ ! -z ${DNSASK} ]; then
         else
                 echo ${I} - ${DNSASK} ${SERVER}
         fi
+        echo "${SERVER};${DNSASK};22;root;;" >> ${TMP_FILE}
 fi
 
 if [ $I -eq 0 ]; then
