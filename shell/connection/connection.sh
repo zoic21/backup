@@ -49,6 +49,16 @@ while read L_IP L_DNS;do
         echo "${L_DNS};${L_IP};22;root;;" >> ${TMP_FILE}
 done < /etc/hosts
 
+DNSASK=$(getent hosts ${SERVER} | awk '{print $2}')
+if [ ! -z ${DNSASK} ]; then
+        I=$((${I} + 1))
+        if [ ${I} -eq 1 ]; then
+                echo -e "${JAUNE}${I} - ${DNSASK} ${SERVER}${NORMAL}"
+        else
+                echo ${I} - ${DNSASK} ${SERVER}
+        fi
+fi
+
 if [ $I -eq 0 ]; then
         echo -e "${ROUGE}No system found${NORMAL}"
         exit 0
