@@ -27,4 +27,7 @@ while [ ${DONE} -lt ${NUMREPOS} ]; do
    done
    PAGE=$(($PAGE + 1))
    echo "Page ${PAGE}"
+   if [ ${PAGE} -gt 100 ]; then
+   		exit 0
+   fi
 done
