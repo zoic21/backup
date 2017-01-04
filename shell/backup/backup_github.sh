@@ -20,6 +20,7 @@ while [ ${DONE} -lt ${NUMREPOS} ]; do
         curl -s -H "Authorization: token ${TOKEN}" -L "https://api.github.com/repos/${REPO}/zipball/" > ${DIR_BCK}/${REPO}.zip
         if [ $? -ne 0 ]; then
                 echo "Error on ${REPO}"
+                exit 0
         fi
         DONE=$(($DONE + 1))
         echo "Repo ${DONE}/${NUMREPOS}"
